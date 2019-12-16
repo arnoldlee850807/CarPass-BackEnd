@@ -4,18 +4,26 @@ const morgan = require('morgan')
 const mysql = require('mysql')
 const bodyParser = require('body-parser')
 
+// METHOD TO SPERATE CODES INTO OTHER FILE
+const router = require('./routes/data.js')
+app.use(router)
+
 // SHOW LOG STATUS
 // app.use(morgan('combined')) // will get full information
 app.use(morgan('short')) 
 
+// LIMIT CONNECTIONS TO AVOID FAILING TO CONNECT WITH MYSQL 
+const pool = mysql.createPool({
+  connectionLimit: 10,
+  host: 'localhost',
+  user: 'root',
+  password: 'handsomearnold',
+  database: 'myDataBase'
+})
+
 // CONNECT TO MYSQL
 function getConnection() {
-  return mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'handsomearnold',
-    database: 'myDataBase'
-  })
+  return pool
 }
 
 // INSERT DATA
@@ -45,8 +53,8 @@ app.post('/user_create', (req, res) => {
   })
 })
 
-// SHOW DATA WITH SPECIFIC ID(http://localhost:3003/data/American)
-app.get('/data/Type:Type', (req, res) => {
+// SHOW DATA WITH SPECIFIC Type EX:(http://localhost:3003/data/American)
+app.get('/data/:Type', (req, res) => {
   console.log("Fetching data with id: " + req.params.Type)
 
   // Setting connection to mysql
@@ -101,7 +109,8 @@ app.get("/testing", (req, res) => {
   res.send("Testing")
 })
 
+const PORT = process.env.PORT || 3003
 // SET PORT TO 3003
-app.listen(3003, () => {
-  console.log("Server is up and listening on 3003")
+app.listen(PORT, () => {
+  console.log("Server is up and listening on: " + PORT)
 })
