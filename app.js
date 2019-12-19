@@ -15,10 +15,14 @@ app.use(morgan('short'))
 // LIMIT CONNECTIONS TO AVOID FAILING TO CONNECT WITH MYSQL 
 const pool = mysql.createPool({
   connectionLimit: 10,
-  host: 'localhost',
+  host: '127.0.0.1',
   user: 'root',
   password: 'handsomearnold',
   database: 'myDataBase'
+  //host: 'us-cdbr-iron-east-05.cleardb.net',
+  //user: 'be939aaa6a71f2',
+  //password: '29e5efef',
+  //database: 'heroku_6a2623ec533aa20'
 })
 
 // CONNECT TO MYSQL
@@ -54,16 +58,57 @@ app.post('/user_create', (req, res) => {
 })
 
 // SHOW DATA WITH SPECIFIC Type EX:(http://localhost:3003/data/American)
-app.get('/data/:Type', (req, res) => {
-  console.log("Fetching data with id: " + req.params.Type)
+app.get('/data/Type/:Type/Brand/:Brand/Model/:Model/Year/:Year/Ejection/:Ejection/Location/:Location/Price/:Price', (req, res) => {
+  console.log("Fetching data with: " + req.params)
 
   // Setting connection to mysql
   const connection = getConnection()
 
-  // Query Setting
+  // Query String
   const selectType = req.params.Type
-  const queryString = "SELECT * FROM hundredthousand WHERE Type = ?"
-  connection.query(queryString, [selectType], (err, rows, fields) => {
+  const selectBrand = req.params.Brand
+  const selectModel = req.params.Model
+  const selectYear = req.params.Year
+  const selectEjection = req.params.Ejection
+  const selectLocation = req.params.Location
+  const selectPrice = req.params.Price
+
+  const queryAttributeURLArray = [selectType, selectBrand, selectModel, selectYear, selectEjection, selectLocation]//, selectPrice]
+  const queryAttributeString = ["Type","Brand","Model","Year","Ejection","Location"]//,"Price"]
+  var queryStringData = []
+  var firstElement = true
+  var queryString = "SELECT * FROM hundredthousand"//Type = ? AND Year = ?"
+
+  for (i = 0; i < queryAttributeURLArray.length - 1; i++) {
+    if (queryAttributeURLArray[i] != "NS") { // NS = "Not Specified"
+      queryStringData.push(queryAttributeURLArray[i])
+      if (firstElement) {
+        queryString += (" WHERE " + queryAttributeString[i] + " = ?")
+        firstElement = false
+      }
+      else {
+        queryString += (" AND " + queryAttributeString[i] + " = ?")
+      }
+    }
+  }
+
+  // There's a range in pricing
+  if (selectPrice != "NS") { 
+    // Price format ex: 0|100, 0 = downbound, 100 = upbound
+    if (firstElement) {
+      queryString += (" WHERE ")
+      firstElement = false
+    }
+    else {
+      queryString += (" AND ")
+    }
+    const boundArray = selectPrice.split("|")
+    const upbound = boundArray[1]
+    const downbound = boundArray[0]
+    queryString += "cast(Price as signed) <= " + upbound + " AND cast(Price as signed) >= " + downbound
+  }
+
+  connection.query(queryString, queryStringData, (err, rows, fields) => {
 
     if (err) {
       console.log("Failed to query for select type: "+ err)
@@ -71,7 +116,7 @@ app.get('/data/:Type', (req, res) => {
       return
     }
 
-    console.log("Fetch data successful")
+    console.log("Fetch data successful, got " + rows.length + " data")
     res.json(rows)
   })
 })
@@ -111,6 +156,6 @@ app.get("/testing", (req, res) => {
 
 const PORT = process.env.PORT || 3003
 // SET PORT TO 3003
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0',() => {
   console.log("Server is up and listening on: " + PORT)
 })
