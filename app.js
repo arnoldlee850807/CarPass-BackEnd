@@ -57,14 +57,33 @@ app.post('/user_create', (req, res) => {
   })
 })
 
+app.get('/distinctData/Target/:Target/Type/:Type/Brand/:Brand/Model/:Model/Year/:Year/Ejection/:Ejection/Location/:Location/Price/:Price', (req, res) => {
+  console.log("Fetching distinct data with: " + req.params)
+
+  const connection = getConnection()
+
+  const selectTarget = req.params.Target
+  const selectBrand = req.params.Brand
+  const selectModel = req.params.Model
+  const selectYear = req.params.Year
+  const selectEjection = req.params.Ejection
+  const selectLocation = req.params.Location
+  const selectPrice = req.params.Price
+
+
+
+
+})
+
 // SHOW DATA WITH SPECIFIC Type EX:(http://localhost:3003/data/American)
-app.get('/data/Type/:Type/Brand/:Brand/Model/:Model/Year/:Year/Ejection/:Ejection/Location/:Location/Price/:Price', (req, res) => {
+app.get('/data/DistinctTarget/:DistinctTarget/Type/:Type/Brand/:Brand/Model/:Model/Year/:Year/Ejection/:Ejection/Location/:Location/Price/:Price', (req, res) => {
   console.log("Fetching data with: " + req.params)
 
   // Setting connection to mysql
   const connection = getConnection()
 
   // Query String
+  const selectDistinctTarget = req.params.DistinctTarget
   const selectType = req.params.Type
   const selectBrand = req.params.Brand
   const selectModel = req.params.Model
@@ -78,6 +97,10 @@ app.get('/data/Type/:Type/Brand/:Brand/Model/:Model/Year/:Year/Ejection/:Ejectio
   var queryStringData = []
   var firstElement = true
   var queryString = "SELECT * FROM hundredthousand"//Type = ? AND Year = ?"
+
+  if (selectDistinctTarget != "NS") { // NS = "Not Specified"
+    queryString = "SELECT DISTINCT " + selectDistinctTarget + " FROM hundredthousand"
+  }
 
   for (i = 0; i < queryAttributeURLArray.length - 1; i++) {
     if (queryAttributeURLArray[i] != "NS") { // NS = "Not Specified"
