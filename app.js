@@ -45,7 +45,7 @@ app.post('/user_create', (req, res) => {
   const Location = req.body.create_Location
   const Price = req.body.create_Price
 
-  const queryString = "INSERT INTO hundredthousand (Type, Brand, Model, Ejection, Year, Location, Price) Values (?, ?, ?, ?, ?, ?, ?)"
+  const queryString = "INSERT INTO carpassdata (Type, Brand, Model, Ejection, Year, Location, Price) Values (?, ?, ?, ?, ?, ?, ?)"
   getConnection.query(queryString, [Type, Brand, Model, Ejection, Year, Location, Price], (err, results, field) => {
     if (err) {
       console.log("Failed to insert: " + err)
@@ -73,18 +73,18 @@ app.get('/data/DistinctTarget/:DistinctTarget/Type/:Type/Brand/:Brand/Model/:Mod
   const selectEjection = req.params.Ejection
   const selectLocation = req.params.Location
   const selectPrice = req.params.Price
-
+ 
   const queryAttributeURLArray = [selectType, selectBrand, selectModel, selectYear, selectEjection, selectLocation]//, selectPrice]
   const queryAttributeString = ["Type","Brand","Model","Year","Ejection","Location"]//,"Price"]
   var queryStringData = []
   var firstElement = true
-  var queryString = "SELECT * FROM hundredthousand"//Type = ? AND Year = ?"
+  var queryString = "SELECT * FROM carpassdata"//Type = ? AND Year = ?"
 
   if (selectDistinctTarget != "NS") { // NS = "Not Specified"
-    queryString = "SELECT DISTINCT " + selectDistinctTarget + " FROM hundredthousand"
+    queryString = "SELECT DISTINCT " + selectDistinctTarget + " FROM carpassdata"
   }
 
-  for (i = 0; i < queryAttributeURLArray.length - 1; i++) {
+  for (i = 0; i < queryAttributeURLArray.length; i++) {
     if (queryAttributeURLArray[i] != "NS") { // NS = "Not Specified"
       queryStringData.push(queryAttributeURLArray[i])
       if (firstElement) {
@@ -112,7 +112,7 @@ app.get('/data/DistinctTarget/:DistinctTarget/Type/:Type/Brand/:Brand/Model/:Mod
     const downbound = boundArray[0]
     queryString += "cast(Price as signed) <= " + upbound + " AND cast(Price as signed) >= " + downbound
   }
-
+  
   connection.query(queryString, queryStringData, (err, rows, fields) => {
 
     if (err) {
@@ -120,8 +120,22 @@ app.get('/data/DistinctTarget/:DistinctTarget/Type/:Type/Brand/:Brand/Model/:Mod
       res.sendStatus(500)
       return
     }
-
-    console.log("Fetch data successful, got " + rows.length + " data")
+    let date_ob = new Date();
+    // current date
+    // adjust 0 before single digit date
+    let date = ("0" + date_ob.getDate()).slice(-2);
+    // current month
+    let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
+    // current year
+    let year = date_ob.getFullYear();
+    // current hours
+    let hours = date_ob.getHours();
+    // current minutes
+    let minutes = date_ob.getMinutes();
+    // current seconds
+    let seconds = date_ob.getSeconds();
+    // prints date & time in YYYY-MM-DD HH:MM:SS format
+    console.log(year + "-" + month + "-" + date + " " + hours + ":" + minutes + ":" + seconds + " Fetch data successful, got " + rows.length + " data");
     res.json(rows)
   })
 })
@@ -134,7 +148,7 @@ app.get('/data', (req, res) => {
   const connection = getConnection()
 
   // Query Setting
-  const queryString = "SELECT * FROM hundredthousand"
+  const queryString = "SELECT * FROM carpassdata"
   connection.query(queryString, (err, rows, fields) => {
 
     if (err) {
